@@ -1,0 +1,59 @@
+---
+title: "Prophet Project"
+author: "Connor Tomchin"
+date: "2024-11-11"
+output: html_document
+---
+
+```{r}
+library(httr2)
+
+api_key <- "C7EO8WAEDCA0JLR2"
+
+ticker <- "IBM"
+
+link <- glue::glue(
+  "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={api_key}&outputsize=full&datatype=csv"
+  )
+
+ibm_request <- request(link) %>% 
+  req_perform()
+
+ibm_daily_return <- read.delim(text = resp_body_string(ibm_request), sep = ",")
+
+```
+
+```{r}
+install.packages('prophet')
+library(prophet)
+```
+
+
+```{r}
+library(dplyr)
+ibm_daily_return <- ibm_daily_return %>% rename(ds = timestamp)
+ibm_daily_return <-ibm_daily_return %>% rename(y = close)
+
+ibm_daily_return$cap <- 8.5
+m <- prophet(ibm_daily_return)
+print(max(ibm_daily_return$y, na.rm = TRUE))
+
+```
+
+```{r}
+
+future <- make_future_dataframe(m, periods = 9000)
+future$cap <- 235.26
+fcst <- predict(m, future)
+plot(m, fcst)
+```
+
+
+```{r}
+install.packages("tidyedgar")
+library(tidyedgar)
+
+df <- yearly_data(years = 2015:2023)
+table(df$data.entityName)
+```
+
